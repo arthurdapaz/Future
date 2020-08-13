@@ -8,7 +8,7 @@
 extension Future {
     /**
      Chain two depending futures providing a function that gets the value of this future as parameter
-     and then creates new one
+     and then creates new one ;)
 
      ````
      struct User {
