@@ -1,0 +1,48 @@
+import XCTest
+@testable import Future
+
+final class FutureTests: XCTestCase {
+    
+    func testFutureOperation() {
+        let futureOperation: Future<Bool, Error> = Future { operation in
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(2000)) {
+                operation(.success(true))
+            }
+        }
+        
+        future {
+            futureOperation
+        }.success { answer in
+            XCTAssertTrue(answer)
+        }.always { answer in
+            XCTAssertNoThrow({ try answer.get() })
+        }
+    }
+    
+    func testFutureFailure() {
+        let futureError: Future<Any, Error> = Future(error: NSError(domain: "Falha", code: 0, userInfo: nil))
+        
+        future {
+            futureError
+        }.failure { error in
+            XCTAssertTrue(error.localizedDescription.contains("Falha"))
+        }
+    }
+    
+    func testFutureSuccess() {
+        let futureBasic: Future<String, Error> = Future(value: "Sucesso")
+        
+        future {
+            futureBasic
+        }.success {
+            XCTAssertTrue($0 == "Sucesso")
+        }
+    }
+
+    static var allTests = [
+        ("testFutureOperation", testFutureOperation),
+        ("testFutureFailure", testFutureFailure),
+        ("testFutureSuccess", testFutureSuccess)
+    ]
+    
+}
