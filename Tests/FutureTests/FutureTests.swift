@@ -38,11 +38,39 @@ final class FutureTests: XCTestCase {
             XCTAssertTrue($0 == "Sucesso")
         }
     }
+    
+    func extrairZip(entry: Bool) -> Future<String, Error> {
+        Future { operation in
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(2000)) {
+                operation(.success("Válido"))
+            }
+        }
+    }
+    
+    func testThen() {
+        let futureOperation: Future<Bool, Error> = Future { operation in
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(2000)) {
+                operation(.success(true))
+            }
+        }
+        
+
+        future {
+            futureOperation
+        }
+        .then(extrairZip(entry:))
+        .always { resultado in
+            
+            XCTAssertNoThrow({ try resultado.get() })
+            XCTAssertTrue((try! resultado.get()) == "a")
+        }
+        
+    }
 
     static var allTests = [
         ("testFutureOperation", testFutureOperation),
         ("testFutureFailure", testFutureFailure),
-        ("testFutureSuccess", testFutureSuccess)
+        ("andThen", testThen)
     ]
     
 }

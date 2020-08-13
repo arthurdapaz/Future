@@ -5,8 +5,6 @@
 //  Created by Alaeddine Messaoudi on 29/05/2018.
 //
 
-//import Foundation
-
 extension Future {
     /**
      Chain two depending futures providing a function that gets the value of this future as parameter
@@ -41,16 +39,14 @@ extension Future {
      - Returns: New chained Future
 
      */
-    public func andThen<U>(_ f: @escaping (_ value: Value) -> Future<U, Failure>) -> Future<U, Failure> {
+    public func then<U>(_ f: @escaping (_ value: Value) -> Future<U, Failure>) -> Future<U, Failure> {
+        
         return Future<U, Failure>(operation: { completion in
-            self.operation() { result in
-                switch result {
-                case .success(let value):
-                    f(value).execute(completion: completion)
-                case .failure(let error):
-                    completion(.failure(error))
-                }
-            }
+            self.execute(onSuccess: { value in
+                f(value).execute(completion: completion)
+            }, onFailure: { error in
+                completion(.failure(error))
+            })
         })
     }
 
@@ -72,14 +68,11 @@ extension Future {
 
     public func map<T>(_ f: @escaping (_ value: Value) -> T) -> Future<T, Failure> {
         return Future<T, Failure>(operation: { completion in
-            self.operation() { result in
-                switch result {
-                case .success(let value):
-                    completion(.success(f(value)))
-                case .failure(let error):
-                    completion(.failure(error))
-                }
-            }
+            self.execute(onSuccess: { value in
+                completion(.success(f(value)))
+            }, onFailure: { error in
+                completion(.failure(error))
+            })
         })
     }
 }

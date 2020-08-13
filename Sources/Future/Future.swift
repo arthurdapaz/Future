@@ -1,9 +1,15 @@
+//
+//  Future.swift
+//  Future
+//
+//  Created by Alaeddine Messaoudi on 29/05/2018.
+//
+
 
 @discardableResult
 public func future<Value, Failure: Error>(_ future: () -> Future<Value, Failure>) -> Future<Value, Failure> {
     future().invoke()
 }
-
 
 /**
  A `Future` helps us to encapsulate a deferred computation, it's a way to represent a value that will exist (or will fail with an error) at some
@@ -145,8 +151,33 @@ public class Future<Value, Failure: Error> {
             completion(result)
         }
     }
-    
-    fileprivate func invoke() -> Future {
+
+    /**
+     Execute the operation. Example usage
+     ````
+     let future = Future(value: 14)
+     future.execute(onSuccess: { value in
+        print(value) // it will print 14
+     }, onFailure: { error in
+        print(error)
+     })
+     ````
+     - Parameters:
+        - onSuccess: the success completion block of the operation. It has the value of the operation as parameter.
+        - onFailure: the failure completion block of the operation. It has the error of the operation as parameter.
+     */
+    internal func execute(onSuccess: @escaping SuccessCompletion, onFailure: FailureCompletion? = nil) {
+        self.operation() { result in
+            switch result {
+            case .success(let value):
+                onSuccess(value)
+            case .failure(let error):
+                onFailure?(error)
+            }
+        }
+    }
+
+    public func invoke() -> Future {
         self.operation() { result in
             switch result {
             case .success(let value):
@@ -162,7 +193,6 @@ public class Future<Value, Failure: Error> {
                 handler(result)
             }
         }
-        
         return self
     }
     
