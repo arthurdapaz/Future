@@ -1,3 +1,3 @@
 # Future
 
-A description of this package.
+Biblioteca simples de Promises
