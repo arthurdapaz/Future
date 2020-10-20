@@ -5,6 +5,8 @@
 //  Created by Alaeddine Messaoudi on 29/05/2018.
 //
 
+import Foundation
+
 extension Future {
     /**
      Chain two depending futures providing a function that gets the value of this future as parameter
@@ -75,4 +77,5 @@ extension Future {
             })
         })
     }
+
 }

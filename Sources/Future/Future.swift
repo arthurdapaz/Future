@@ -5,12 +5,6 @@
 //  Created by Alaeddine Messaoudi on 29/05/2018.
 //
 
-
-@discardableResult
-public func future<Value, Failure: Error>(_ future: () -> Future<Value, Failure>) -> Future<Value, Failure> {
-    future().invoke()
-}
-
 /**
  A `Future` helps us to encapsulate a deferred computation, it's a way to represent a value that will exist (or will fail with an error) at some
  point in the future. It's a placeholder for values that are currently unknown due to waiting for the network, long and complex computations,
@@ -177,6 +171,7 @@ public class Future<Value, Failure: Error> {
         }
     }
 
+    @discardableResult
     public func invoke() -> Future {
         self.operation() { result in
             switch result {
