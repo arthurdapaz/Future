@@ -4,47 +4,48 @@ import XCTest
 final class FutureTests: XCTestCase {
     
     func testFutureOperation() {
+        let exp = expectation(description: "Return true")
+        exp.assertForOverFulfill = false
+        
         let futureOperation: Future<Bool, Error> = Future { operation in
             DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(2000)) {
                 operation(.success(true))
             }
         }
         
-        future {
-            futureOperation
-        }.success { answer in
-            XCTAssertTrue(answer)
-        }.always { answer in
-            XCTAssertNoThrow({ try answer.get() })
-        }
+        futureOperation
+            .success { answer in
+                XCTAssertTrue(answer)
+                exp.fulfill()
+            }
+            .always { answer in
+                XCTAssertNoThrow({ try answer.get() })
+                exp.fulfill()
+            }
+            .invoke()
+        
+        wait(for: [exp], timeout: 3.0)
     }
     
     func testFutureFailure() {
         let futureError: Future<Any, Error> = Future(error: NSError(domain: "Falha", code: 0, userInfo: nil))
         
-        future {
-            futureError
-        }.failure { error in
-            XCTAssertTrue(error.localizedDescription.contains("Falha"))
-        }
+        
+        futureError
+            .failure { error in
+                XCTAssertTrue(error.localizedDescription.contains("Falha"))
+            }
+            .invoke()
     }
     
     func testFutureSuccess() {
         let futureBasic: Future<String, Error> = Future(value: "Sucesso")
         
-        future {
-            futureBasic
-        }.success {
-            XCTAssertTrue($0 == "Sucesso")
-        }
-    }
-    
-    func extrairZip(entry: Bool) -> Future<String, Error> {
-        Future { operation in
-            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(2000)) {
-                operation(.success("Válido"))
+        futureBasic
+            .success {
+                XCTAssertTrue($0 == "Sucesso")
             }
-        }
+            .invoke()
     }
     
     func testThen() {
@@ -54,23 +55,28 @@ final class FutureTests: XCTestCase {
             }
         }
         
-
-        future {
-            futureOperation
+        futureOperation
+            .then(extrairZip(entry:))
+            .always { resultado in
+                
+                XCTAssertNoThrow({ try resultado.get() })
+                XCTAssertTrue((try! resultado.get()) == "a")
+            }.invoke()
+    }
+    
+    private func extrairZip(entry: Bool) -> Future<String, Error> {
+        Future { operation in
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(2000)) {
+                operation(.success("Válido"))
+            }
         }
-        .then(extrairZip(entry:))
-        .always { resultado in
-            
-            XCTAssertNoThrow({ try resultado.get() })
-            XCTAssertTrue((try! resultado.get()) == "a")
-        }
-        
     }
 
     static var allTests = [
         ("testFutureOperation", testFutureOperation),
         ("testFutureFailure", testFutureFailure),
-        ("andThen", testThen)
+        ("testFutureSuccess", testFutureSuccess),
+        ("testThen", testThen)
     ]
     
 }
